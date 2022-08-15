@@ -1,2 +1,1 @@
-web:gunicorn humanspace.wsgi --log-file -
-
+web: gunicorn humanspace.wsgi
