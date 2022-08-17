@@ -1,6 +1,8 @@
 import tweepy
 from decouple import config
 
+from urllib import parse
+from users.models import TwitterAuthFlowState
 
 class TwitterAPI:
     def __init__(self):
@@ -9,29 +11,48 @@ class TwitterAPI:
         self.client_id = config('TWITTER_CLIENT_ID')
         self.client_secret = config('TWITTER_CLIENT_SECRET')
         self.oauth_callback_url = config('TWITTER_OAUTH_CALLBACK_URL')
+        self.scopes =  ["tweet.read", "tweet.write", "bookmark.read", "bookmark.write", "users.read", "list.read", "list.write"]
 
     def twitter_login(self):
-        oauth1_user_handler = tweepy.OAuthHandler(self.api_key, self.api_secret, callback=self.oauth_callback_url)
-        url = oauth1_user_handler.get_authorization_url(signin_with_twitter=True)
-        request_token = oauth1_user_handler.request_token["oauth_token"]
-        request_secret = oauth1_user_handler.request_token["oauth_token_secret"]
-        return url, request_token, request_secret
+        oauth2_user_handler = tweepy.OAuth2UserHandler(client_id=self.client_id,   
+                                                        redirect_uri=self.oauth_callback_url,
+                                                        scope=self.scopes,
+                                                        client_secret=self.client_secret)
+        url = oauth2_user_handler.get_authorization_url()
+        state_value = parse.parse_qs(parse.urlparse(url).query)['state'][0]
+        auth_flow_state =  TwitterAuthFlowState.objects.filter(state=state_value).first()
+        if auth_flow_state is None:
+            auth_flow_state = TwitterAuthFlowState(state=state_value, code_verifier=oauth2_user_handler._client.code_verifier)
+            auth_flow_state.save()
+        return url 
 
-    def twitter_callback(self,oauth_verifier, oauth_token, oauth_token_secret):
-        oauth1_user_handler = tweepy.OAuthHandler(self.api_key, self.api_secret, callback=self.oauth_callback_url)
-        oauth1_user_handler.request_token = {
-            'oauth_token': oauth_token,
-            'oauth_token_secret': oauth_token_secret
-        }
-        access_token, access_token_secret = oauth1_user_handler.get_access_token(oauth_verifier)
-        return access_token, access_token_secret
+    def twitter_callback(self, authorization_response):
+        oauth2_user_handler = tweepy.OAuth2UserHandler(client_id=self.client_id,   
+                                                        redirect_uri=self.oauth_callback_url,
+                                                        scope=self.scopes,
+                                                        client_secret=self.client_secret)
+        state_value = parse.parse_qs(parse.urlparse(authorization_response).query)['state'][0]
+        auth_flow_state =  TwitterAuthFlowState.objects.filter(state=state_value).first() 
+        if auth_flow_state is not None:
+            oauth2_user_handler._client.code_verifier = auth_flow_state.code_verifier
 
-    def get_me(self, access_token, access_token_secret):
+        access_token = oauth2_user_handler.fetch_token(authorization_response)
+        return access_token 
+
+    def get_me(self, oauth_access_token):
         try:
-            client = tweepy.Client(consumer_key=self.api_key, consumer_secret=self.api_secret, access_token=access_token,
-                                   access_token_secret=access_token_secret)
-            info = client.get_me(user_auth=True, expansions='pinned_tweet_id')
-            return info
+            client = tweepy.Client(oauth_access_token)
+            data = client.get_me(user_auth=False, expansions='pinned_tweet_id')
+            return data
+        except Exception as e:
+            print(e)
+            return None
+    
+    def get_bookmarks(self, oauth_access_token):
+        try:
+            client = tweepy.Client(oauth_access_token)
+            data = client.get_bookmarks()
+            return data
         except Exception as e:
             print(e)
             return None

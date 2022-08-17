@@ -6,10 +6,15 @@ from .models import TwitterUser
 def create_update_user_from_twitter(twitter_user_new):
     twitter_user = TwitterUser.objects.filter(twitter_id=twitter_user_new.twitter_id).first()
     if twitter_user is None:
+        full_name = twitter_user_new.name.split(" ")
+        first_name = full_name[0]
+
         user = User.objects.filter(username=twitter_user_new.screen_name).first()
         if user is None:
+            # Create user
             user = User(username=twitter_user_new.screen_name,
-                        first_name=twitter_user_new.name)
+                        first_name=first_name,
+                        full_name=twitter_user_new.name)
             user.save()
         twitter_user = TwitterUser(twitter_id=twitter_user_new.twitter_id,
                                    name=twitter_user_new.name,
@@ -31,6 +36,5 @@ def create_update_user_from_twitter(twitter_user_new):
 
 def check_token_still_valid(twitter_user):
     twitter_api = TwitterAPI()
-    info = twitter_api.get_me(twitter_user.twitter_oauth_token.oauth_token,
-                              twitter_user.twitter_oauth_token.oauth_token_secret)
-    return info
+    data = twitter_api.get_me(twitter_user.twitter_oauth_token.oauth_token)
+    return data

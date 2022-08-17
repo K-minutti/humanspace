@@ -8,10 +8,12 @@
 <hr>
 <h2>
 {% if user.is_authenticated %}
-   Hello, {{ user.username }}.
+   Hello, {{ user.first_name }}.
    <a href="{% url 'users:logout' %}">Log out</a>
+   <a href="{% url 'humanspace_app:app_logout' %}">Log out humanspace_app</a>
      {% else %}
-  <a href="{% url 'users:register' %}">Register</a> -  
+  <a href="{% url 'users:register' %}">Sign up</a> -
+  <a href="{% url 'users:twitter_login' %}">Sign up with Twitter</a> -
    <a href="{% url 'users:login' %}">Log in</a>
 {% endif %}
 </h2>

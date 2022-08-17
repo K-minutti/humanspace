@@ -2,8 +2,8 @@ from functools import wraps
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .auth import check_token_still_valid
-from .auth import TwitterUser
+from users.auth import check_token_still_valid
+from users.models import TwitterUser
 
 
 def twitter_login_required(function):
@@ -13,7 +13,7 @@ def twitter_login_required(function):
         info = check_token_still_valid(twitter_user)
         if info is None:
             logout(request)
-            return HttpResponseRedirect(reverse('twitter_login'))
+            return HttpResponseRedirect(reverse('users:twitter_login'))
         else:
             return function(request, *args, **kwargs)
     return wrap

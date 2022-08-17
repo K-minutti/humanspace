@@ -1,0 +1,17 @@
+{% extends "humanspace_app/base.html" %}
+
+{% block content %}
+
+<p>BOOKMARKS</p>
+
+  <ul>
+  {% for topic in topics%}
+  <li> 
+    <p>{{topic}}</p>
+  </li>
+      {% empty %}
+      <li>No topics have been added yet.</li>
+  {% endfor %}
+  </ul>
+
+{% endblock content %}

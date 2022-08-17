@@ -5,13 +5,13 @@ from . import views
 
 app_name = "humanspace_app"
 urlpatterns = [
-        # Home page
+        # Root page
         path('', views.index, name='index'),
+        # Home page
+        path('home/', views.home, name='home'),
 
         # Auth
-        path('auth/login/', views.twitter_login, name='twitter_login'),
-        path('auth/login/callback/', views.twitter_callback, name='twitter_callback'),
-        path('auth/logout/', views.app_logout, name='app_logout'),
+        path('user/logout/', views.app_logout, name='app_logout'),
 
         # Topics
         path('topics/', views.topics, name='topics'),
@@ -21,5 +21,8 @@ urlpatterns = [
         # Entries
         path('new_entry/<int:topic_id>/', views.new_entry, name='new_entry'),
         path('edit_entry/<int:entry_id>/', views.edit_entry, name='edit_entry'),
+
+        #Bookmarks 
+        path('bookmarks/', views.bookmarks, name='bookmarks'),
         ]
 

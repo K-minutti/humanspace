@@ -9,4 +9,8 @@ urlpatterns = [
         path('', include('django.contrib.auth.urls')),
         # Registration 
         path('register/', views.register, name='register'),
+        
+        # Auth
+        path('auth/login/', views.twitter_login, name='twitter_login'),
+        path('auth/login/callback/', views.twitter_callback, name='twitter_callback'),
         ]
